@@ -1,0 +1,89 @@
+info:
+  component: ${app_name}
+
+server:
+  port: ${port} #9148
+  servlet:
+    context-path: ${url_challenge}
+
+spring:
+  profiles.active: @spring.profiles.active@
+  config.import: aws-parameterstore:/@spring.profiles.active@/microservice_worker_attention_points/;/@spring.profiles.active@/microservice_general/
+
+  threads.virtual.enabled: true
+
+  application.name: ${app_name}
+
+  datasource:
+    url: ${url_bd_postgres}
+    username: ${username_postgres}
+    password: ${password_postgres}
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    url: ${url_bd_postgres}
+    user: ${username_postgres}
+    password: ${password_postgres}
+    enabled: true
+    change-log: db/changelog/db.changelog-master.yaml
+
+  jpa:
+    properties:
+      jdbc:
+        time_zone: UTC
+
+  kafka:
+    bootstrap-servers: ${bootstrap_servers}
+
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+    consumer:
+      concurrency: ${concurrency_kafka} #1
+      group-id: ${group_id} #backend-attention-points-cert-consumer-v1
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        auto-offset-reset: earliest
+
+  topics:
+    clientes: ${topic_clientes}
+application:
+  attention-point:
+    radiusInMeters: ${attention-point_radiusInMeters} #10000
+
+
+logging:
+  level:
+    root: info
+    co.com.flypass: info
+    org.springframework: info
+    org.hibernate: warn
+  pattern:
+    correlation: "[trace-id=%X{trace-id}]"
+  file:
+    name: /opt/despliegue/microservices/logs/${spring.application.name}/${spring.application.name}Log.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: ${spring.application.name}-%d{yyyy-MM-dd}Log.log.%i
+      max-file-size: 1GB
+      max-history: 3
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: loggers, metrics, health, info
+  otlp:
+    metrics:
+      export:
+        url: ${url_otlp}
+        step: 15s
+
+  endpoint:
+    heath:
+      show-details: always
+      probes:
+        enabled: true

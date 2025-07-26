@@ -1,0 +1,26 @@
+name: main pipeline 
+
+on:
+  push:
+    branches: 
+      - feature/**
+      - hotfix/**
+      - develop
+      - main
+            
+  pull_request:
+    branches: 
+      - release/**
+    types:
+      - closed
+
+jobs:
+  backend-flypass:
+    name: microservice flypass
+    uses: f2x-flypass/pipeline-templates/.github/workflows/main_new_microservice.yml@main
+
+    with:
+      trigger: ${{ github.ref_name }}
+      languages: java
+      typerelease: Java
+    secrets: inherit
